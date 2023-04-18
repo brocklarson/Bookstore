@@ -1,4 +1,4 @@
-{% extends "tutorials/base.html" %} {% load static %}{% block title %} NuCamp:
+{% extends "books/base.html" %} {% load static %}{% block title %} NuCamp:
 Login {% endblock%} {% block content%}
 
 <div class="container">
@@ -18,25 +18,13 @@ Login {% endblock%} {% block content%}
       <div class="form-group row">
         <label for="username" class="col-md-4 col-form-label">Username</label>
         <div class="col-md-8">
-          <input
-            type="text"
-            class="form-control"
-            id="username"
-            name="username"
-            placeholder="Username"
-          />
+          <input type="text" class="form-control" id="username" name="username" placeholder="Username" />
         </div>
       </div>
       <div class="form-group row">
         <label for="password" class="col-md-4 col-form-label">Password</label>
         <div class="col-md-8">
-          <input
-            type="password"
-            class="form-control"
-            id="password"
-            name="password"
-            placeholder="Password"
-          />
+          <input type="password" class="form-control" id="password" name="password" placeholder="Password" />
         </div>
       </div>
       <div class="form-group row">
@@ -45,12 +33,12 @@ Login {% endblock%} {% block content%}
             Login
           </button>
         </div>
-        <small
-          ><p class="text-center">
+        <small>
+          <p class="text-center">
             Not registered yet!
             <a href="{% url 'register' %}"><b>Register Now!</b></a>
-          </p></small
-        >
+          </p>
+        </small>
       </div>
     </form>
   </div>

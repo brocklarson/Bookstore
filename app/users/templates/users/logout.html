@@ -1,4 +1,4 @@
-{% extends "tutorials/base.html" %} {% load static %}{% block title %} NuCamp:
+{% extends "books/base.html" %} {% load static %}{% block title %} NuCamp:
 Logout {% endblock%} {% block content%}
 
 <div class="container">
@@ -18,9 +18,7 @@ Logout {% endblock%} {% block content%}
     </h5>
     <form class="form-signin">
       <div class="form-group">
-        <a class="btn btn-lg btn-primary btn-block" href="{% url 'login' %}"
-          >Login Again</a
-        >
+        <a class="btn btn-lg btn-primary btn-block" href="{% url 'login' %}">Login Again</a>
       </div>
     </form>
   </div>
