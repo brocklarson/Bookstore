@@ -101,8 +101,8 @@ def book_detail(request, pk):
 
 
 @api_view(['GET'])
-def book_list_published(request):
-    books = Book.objects.filter(published=True)
+def book_list_available(request):
+    books = Book.objects.filter(available=True)
 
     if request.method == 'GET':
         books_serializer = BookSerializer(books, many=True)
