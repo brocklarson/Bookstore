@@ -14,9 +14,7 @@ from rest_framework.decorators import api_view
 # def index(request):
 #     return render(request, "books/index.html")
 
-
 def index(request):
-    print("------------------------- I AM HERE")
     queryset = Book.objects.all()
     return render(request, "books/index.html", {'books': queryset})
 
