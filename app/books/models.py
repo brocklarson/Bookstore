@@ -6,3 +6,6 @@ class Book(models.Model):
     price = models.FloatField(blank=False, default=0.0)
     paperback = models.BooleanField(blank=False, default=True)
     available = models.BooleanField(blank=False, default=True)
+
+class Author(models.Model):
+    name = models.CharField(max_length=100, blank=False, default='')

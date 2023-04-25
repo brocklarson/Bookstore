@@ -141,6 +141,8 @@ header h1 {
 
 .table-header-text {
     cursor: pointer;
+    color: black;
+    text-decoration: none;
 }
 
 .table-header-text:hover,
@@ -437,6 +439,11 @@ footer {
     padding: 8px 0 8px 0;
     position: fixed;
     width: 100%;
+    margin: 0;
+}
+
+footer p {
+    margin: 0 0 0 0 !important;
 }
 
 .fa-github {

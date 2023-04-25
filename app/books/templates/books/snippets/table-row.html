@@ -1,0 +1,17 @@
+<tr>
+    <td>{{ book.title }}</td>
+
+    {% if book.available %}
+    <td>Available</td>
+    {% else %}
+    <td>Unavailable</td>
+    {% endif %}
+
+    {% if book.paperback %}
+    <td>Paperback</td>
+    {% else %}
+    <td>Hardback</td>
+    {% endif %}
+
+    <td>{{ book.price }}</td>
+</tr>

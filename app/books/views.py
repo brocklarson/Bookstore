@@ -6,17 +6,19 @@ from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from books.models import Book
-from books.serializers import BookSerializer
+from books.models import Book, Author
+from books.serializers import BookSerializer, AuthorSerializer
 from rest_framework.decorators import api_view
 
 # Create your views here.
 # def index(request):
-#     return render(request, "books/index.html")
+#     return render(request, "index.html")
 
 def index(request):
-    queryset = Book.objects.all()
-    return render(request, "books/index.html", {'books': queryset})
+    context = {
+        'books': Book.objects.all()
+    } 
+    return render(request, "books/index.html", context)
 
 
 class index(APIView):
@@ -30,7 +32,7 @@ class index(APIView):
 
 class list_all_books(APIView):
     renderer_classes = [TemplateHTMLRenderer]
-    template_name = 'books/book_list.html'
+    template_name = 'book_list.html'
 
     def get(self, request):
         queryset = Book.objects.all()
@@ -105,3 +107,61 @@ def book_list_available(request):
     if request.method == 'GET':
         books_serializer = BookSerializer(books, many=True)
         return JsonResponse(books_serializer.data, safe=False)
+
+@api_view(['GET', 'POST', 'DELETE'])
+def author_list(request):
+    if request.method == 'GET':
+        authors = Author.objects.all()
+
+        name = request.GET.get('name', None)
+        if name is not None:
+            authors = authors.filter(name__icontains=name)
+
+        authors_serializer = AuthorSerializer(authors, many=True)
+        return JsonResponse(authors_serializer.data, safe=False)
+        # 'safe=False' for objects serialization
+
+    elif request.method == 'POST':
+        author_data = JSONParser().parse(request)
+        author_serializer = AuthorSerializer(data=author_data)
+        if author_serializer.is_valid():
+            author_serializer.save()
+            return JsonResponse(author_serializer.data,
+                                status=status.HTTP_201_CREATED)
+        return JsonResponse(author_serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        count = Author.objects.all().delete()
+        return JsonResponse(
+            {
+                'message':
+                '{} Authors were deleted successfully!'.format(count[0])
+            },
+            status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def author_detail(request, pk):
+    try:
+        author = Author.objects.get(pk=pk)
+    except Author.DoesNotExist:
+        return JsonResponse({'message': 'The author does not exist'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'GET':
+        author_serializer = AuthorSerializer(author)
+        return JsonResponse(author_serializer.data)
+
+    elif request.method == 'PUT':
+        author_data = JSONParser().parse(request)
+        author_serializer = AuthorSerializer(author, data=author_data)
+        if author_serializer.is_valid():
+            author_serializer.save()
+            return JsonResponse(author_serializer.data)
+        return JsonResponse(author_serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        author.delete()
+        return JsonResponse({'message': 'Author was deleted successfully!'},
+                            status=status.HTTP_204_NO_CONTENT)
