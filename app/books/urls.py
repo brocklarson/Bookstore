@@ -10,4 +10,5 @@ urlpatterns = [
     path('api/books/available/', books_views.book_list_available),
     path('api/authors/', books_views.author_list),
     path('api/authors/<int:pk>/', books_views.author_detail),
+    path('api/book_author/', books_views.correlate_book_author),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

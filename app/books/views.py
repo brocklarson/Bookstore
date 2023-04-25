@@ -72,6 +72,27 @@ def book_list(request):
             },
             status=status.HTTP_204_NO_CONTENT)
 
+@api_view(['POST'])
+def correlate_book_author(request):
+    data = JSONParser().parse(request)
+
+    try:
+        author = Author.objects.get(pk=data['author_id'])
+    except Author.DoesNotExist:
+        return JsonResponse({'message': 'The author does not exist'},
+                            status=status.HTTP_404_NOT_FOUND)
+    
+    try:
+        book = Book.objects.get(pk=data['book_id'])
+    except Book.DoesNotExist:
+        return JsonResponse({'message': 'The book does not exist'},
+                            status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'POST':
+        author.books.add(book)
+        author.save()
+        return JsonResponse({'message': 'Author added to book'},
+                                status=status.HTTP_201_CREATED)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def book_detail(request, pk):
