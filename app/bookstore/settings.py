@@ -76,14 +76,16 @@ WSGI_APPLICATION = 'bookstore.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-
+DB_HOST = config('DB_HOST')
+DEV = bool(int(config('DEV')))
+if DEV: DB_HOST = config('DB_LOCALHOST')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': config('DB_NAME'),
         'USER': config('DB_USER'),
         'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),
+        'HOST': DB_HOST,
         'PORT': config('DB_PORT'),
     }
 }
