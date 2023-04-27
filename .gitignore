@@ -1,3 +1,5 @@
 planning_docs
 venv
 app/.env
+app/.pytest_cache
+app/.vscode
