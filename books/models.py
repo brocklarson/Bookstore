@@ -6,6 +6,7 @@ class Book(models.Model):
     price = models.FloatField(blank=False, default=0.0)
     paperback = models.BooleanField(blank=False, default=True)
     available = models.BooleanField(blank=False, default=True)
+    authors = models.ManyToManyField('Author', blank=False, related_name='books')
 
     def __str__(self):
         return self.title
@@ -17,4 +18,3 @@ class Author(models.Model):
     def __str__(self):
         return self.name
     
-    books = models.ManyToManyField(Book)

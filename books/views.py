@@ -10,14 +10,16 @@ from books.models import Book, Author
 from books.serializers import BookSerializer, AuthorSerializer
 from rest_framework.decorators import api_view
 
-# Create your views here.
-# def index(request):
-#     return render(request, "index.html")
-
 def index(request):
     context = {
         'books': Book.objects.all()
     } 
+    return render(request, "books/index.html", context)
+
+def authors_index(request):
+    context = {
+        'authors': Author.objects.all()
+    }
     return render(request, "books/index.html", context)
 
 
@@ -56,6 +58,7 @@ def book_list(request):
     elif request.method == 'POST':
         book_data = JSONParser().parse(request)
         book_serializer = BookSerializer(data=book_data)
+        # if author is in book_data, check if author is in author_list and add correlation or create author and add correlation 
         if book_serializer.is_valid():
             book_serializer.save()
             return JsonResponse(book_serializer.data,
@@ -72,10 +75,9 @@ def book_list(request):
             },
             status=status.HTTP_204_NO_CONTENT)
 
-@api_view(['POST'])
+@api_view(['GET','POST'])
 def correlate_book_author(request):
     data = JSONParser().parse(request)
-
     try:
         author = Author.objects.get(pk=data['author_id'])
     except Author.DoesNotExist:
@@ -88,11 +90,14 @@ def correlate_book_author(request):
         return JsonResponse({'message': 'The book does not exist'},
                             status=status.HTTP_404_NOT_FOUND)
     
-    if request.method == 'POST':
+    if request.method == 'GET':
+        # CREATE THIS FUNCTIONALITY
+        pass
+    elif request.method == 'POST':
         author.books.add(book)
         author.save()
         return JsonResponse({'message': 'Author added to book'},
-                                status=status.HTTP_201_CREATED)
+                            status=status.HTTP_201_CREATED)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def book_detail(request, pk):

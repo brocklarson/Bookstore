@@ -1,7 +1,7 @@
 <tr>
     <td>{{ book.title }}</td>
 
-    <td>Author</td>
+    <td>{{ book.authors.all|join:", " }}</td>
 
     {% if book.paperback %}
     <td>Paperback</td>
@@ -9,5 +9,5 @@
     <td>Hardback</td>
     {% endif %}
 
-    <td>{{ book.price }}</td>
+    <td>${{ book.price }}</td>
 </tr>
