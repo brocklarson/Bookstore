@@ -1,10 +1,10 @@
 const addBookModule = (() => {
     //CACHE DOM
-    const formBackground = document.getElementById(`formBackground`);
-    const formContainer = document.getElementById(`formContainer`);
-    const submitButton = document.getElementById(`submitButton`);
-    const addBookButton = document.getElementById(`addBookButton`);
-    const exitForm = document.getElementById(`closeForm`);
+    const formBackground = $(`#formBackground`)[0];
+    const formContainer = $(`#formContainer`)[0];
+    const submitButton = $(`#submitButton`)[0];
+    const addBookButton = $(`#addBookButton`)[0];
+    const exitForm = $(`#closeForm`)[0];
 
     //LISTENERS
     addBookButton.addEventListener(`click`, showForm);
@@ -14,11 +14,11 @@ const addBookModule = (() => {
 
     //HANDLE FORM
     function showForm() {
-        document.getElementById(`bookTitle`).value = ``;
-        document.getElementById(`bookAuthor`).value = ``;
-        document.getElementById(`coverType`).value = `Paperback`;
-        document.getElementById(`price`).value = ``;
-        document.getElementById(`availableSwitch`).checked = true;
+        $(`#bookTitle`)[0].value = ``;
+        $(`#bookAuthor`)[0].value = ``;
+        $(`#coverType`)[0].value = `Paperback`;
+        $(`#price`)[0].value = ``;
+        $(`#availableSwitch`)[0].checked = true;
         formContainer.classList.add(`show`);
         formBackground.classList.add(`show`);
     }
@@ -26,6 +26,38 @@ const addBookModule = (() => {
     function closeForm() {
         formContainer.classList.remove(`show`);
         formBackground.classList.remove(`show`);
+    }
+
+    // Form Validation
+    function invalidForm() {
+        let invalid = false;
+        const invalidIndicator = document.querySelectorAll(`small`);
+
+        for (let i = 0; i < invalidIndicator.length; i++) {
+            invalidIndicator[i].classList.remove(`show`);
+        }
+
+        if (addBookForm.elements[`bookTitle`].value === ``) {
+            $('#invalidTitle')[0].classList.add(`show`);
+            invalid = true;
+        }
+        if (addBookForm.elements[`bookAuthor`].value === ``) {
+            $('#invalidAuthor')[0].classList.add(`show`);
+            invalid = true;
+        }
+        if (addBookForm.elements[`price`].value === `` || parseFloat(addBookForm.elements[`price`].value) < 0) {
+            $('#invalidPrice')[0].classList.add(`show`);
+            invalid = true;
+        }
+        return invalid;
+    }
+
+    //AJAX Requests
+    async function submitBook() {
+        if (invalidForm()) return;
+        await booksPOST();
+        closeForm();
+        updateTable(createRows);
     }
 
     function getJsonObject() {
@@ -38,17 +70,7 @@ const addBookModule = (() => {
         })
     }
 
-    function updateTable(handleData) {
-        $.ajax({
-            method: "GET",
-            url: "/api/books/",
-            success: function (data) {
-                handleData(data)
-            }
-        });
-    }
-
-    function booksPostAPI() {
+    function booksPOST() {
         const jsonFormData = getJsonObject();
         return $.ajax({
             type: 'POST',
@@ -62,47 +84,29 @@ const addBookModule = (() => {
         })
     }
 
-    async function submitBook() {
-        if (invalidForm()) return;
-        await booksPostAPI();
-        closeForm();
-        updateTable(function (data) {
-            $("tbody").empty();
-            $.each(data, function (key, value) {
-                const title = value.title;
-                const cover = value.paperback ? "Paperback" : "Hardback";
-                const authors = value.authors.map(function (author) {
-                    return author['name'];
-                }).join(", ");
-                const price = value.price;
-                $("tbody").append(
-                    `<tr><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td><span class="material-icons-outlined edit">edit</span></td><td><span class="material-icons-outlined edit">close</span></td></tr>`
-                )
-            })
+    function updateTable(callback) {
+        $.ajax({
+            method: "GET",
+            url: "/api/books/",
+            success: function (data) {
+                callback(data)
+            }
         });
     }
 
-    function invalidForm() {
-        let invalid = false;
-        const invalidIndicator = document.querySelectorAll(`small`);
-
-        for (let i = 0; i < invalidIndicator.length; i++) {
-            invalidIndicator[i].classList.remove(`show`);
-        }
-
-        if (addBookForm.elements[`bookTitle`].value === ``) {
-            document.getElementById('invalidTitle').classList.add(`show`);
-            invalid = true;
-        }
-        if (addBookForm.elements[`bookAuthor`].value === ``) {
-            document.getElementById('invalidAuthor').classList.add(`show`);
-            invalid = true;
-        }
-        if (addBookForm.elements[`price`].value === `` || parseFloat(addBookForm.elements[`price`].value) < 0) {
-            document.getElementById('invalidPrice').classList.add(`show`);
-            invalid = true;
-        }
-        return invalid;
+    function createRows(data) {
+        $("tbody").empty();
+        $.each(data, function (key, value) {
+            const title = value.title;
+            const cover = value.paperback ? "Paperback" : "Hardback";
+            const authors = value.authors.map(function (author) {
+                return author['name'];
+            }).join(", ");
+            const price = value.price;
+            $("tbody").append(
+                `<tr><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td><span class="material-icons-outlined edit">edit</span></td><td><span class="material-icons-outlined edit">close</span></td></tr>`
+            )
+        })
     }
 })();
 
