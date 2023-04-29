@@ -162,7 +162,9 @@ th:nth-child(6) {
     font-size: 0.8em;
     padding: 8px 4px 8px 0;
     text-align: left;
-    word-wrap: break-word;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .checked-out-cell {
@@ -254,6 +256,7 @@ th:nth-child(6) {
     top: 50%;
     transform: translate(-50%, -50%);
     width: 95vw;
+    max-width: 800px;
     z-index: 5;
 }
 

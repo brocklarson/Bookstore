@@ -104,7 +104,7 @@ const addBookModule = (() => {
             }).join(", ");
             const price = value.price;
             $("tbody").append(
-                `<tr><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td><span class="material-icons-outlined edit">edit</span></td><td><span class="material-icons-outlined edit">close</span></td></tr>`
+                f`<tr><td>{` + title + `}</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td><span class="material-icons-outlined edit">edit</span></td><td><span class="material-icons-outlined edit">close</span></td></tr>`
             )
         })
     }
