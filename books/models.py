@@ -5,7 +5,7 @@ class Book(models.Model):
     title = models.CharField(max_length=100, blank=False, default='')
     price = models.FloatField(blank=False, default=0.0)
     paperback = models.BooleanField(blank=False, default=True)
-    available = models.BooleanField(blank=False, default=True)
+    available = models.BooleanField(blank=False)
     authors = models.ManyToManyField('Author', blank=False, related_name='books')
 
     def __str__(self):
