@@ -28,10 +28,58 @@ const addBookModule = (() => {
         formBackground.classList.remove(`show`);
     }
 
-    function submitBook(event) {
-        event.preventDefault();
+    function getJsonObject() {
+        return JSON.stringify({
+            "title": $('#bookTitle')[0].value,
+            "price": parseFloat($('#price')[0].value),
+            "paperback": ($('#coverType')[0].value == "Paperback"),
+            "available": ($('#availableSwitch')[0].value == "on"),
+            "authors": $('#bookAuthor')[0].value.replace(/,\s/g, ",").split(',')
+        })
+    }
+
+    function updateTable(handleData) {
+        $.ajax({
+            method: "GET",
+            url: "/api/books/",
+            success: function (data) {
+                handleData(data)
+            }
+        });
+    }
+
+    function booksPostAPI() {
+        const jsonFormData = getJsonObject();
+        return $.ajax({
+            type: 'POST',
+            url: '/api/books/',
+            data: jsonFormData,
+            dataType: 'json',
+            contentType: 'application/JSON',
+            success: function () {
+                console.log(jsonFormData);
+            }
+        })
+    }
+
+    async function submitBook() {
         if (invalidForm()) return;
+        await booksPostAPI();
         closeForm();
+        updateTable(function (data) {
+            $("tbody").empty();
+            $.each(data, function (key, value) {
+                const title = value.title;
+                const cover = value.paperback ? "Paperback" : "Hardback";
+                const authors = value.authors.map(function (author) {
+                    return author['name'];
+                }).join(", ");
+                const price = value.price;
+                $("tbody").append(
+                    `<tr><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td><span class="material-icons-outlined edit">edit</span></td><td><span class="material-icons-outlined edit">close</span></td></tr>`
+                )
+            })
+        });
     }
 
     function invalidForm() {
