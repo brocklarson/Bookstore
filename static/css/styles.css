@@ -141,6 +141,12 @@ header h1 {
     font-size: 0.9em !important;
 }
 
+.book-id-header,
+.book-id {
+    width: 0 !important;
+    overflow: hidden;
+}
+
 .table-header-text {
     cursor: pointer;
     color: black;
@@ -152,8 +158,8 @@ header h1 {
     text-decoration: underline;
 }
 
-th:nth-child(5),
-th:nth-child(6) {
+th:nth-child(6),
+th:nth-child(7) {
     text-align: center !important;
     width: 30px;
 }
@@ -181,6 +187,7 @@ th:nth-child(6) {
 .icons-cell {
     padding: 0 0 !important;
     text-align: center !important;
+    pointer-events: none;
 }
 
 .icons-cell span {
@@ -194,7 +201,7 @@ th:nth-child(6) {
     transition: 0.4s;
 }
 
-.view:hover {
+.edit:hover {
     transform-origin: center;
     transform: scale(1.15);
     transition: 0.4s;
