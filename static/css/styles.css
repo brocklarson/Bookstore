@@ -193,6 +193,7 @@ th:nth-child(7) {
 .icons-cell span {
     cursor: pointer;
     font-size: 1.5em !important;
+    pointer-events: all;
 }
 
 .remove:hover {
@@ -237,6 +238,10 @@ th:nth-child(7) {
     transform-origin: center;
     transform: rotate(90deg) scale(1.05);
     transition: 0.4s;
+}
+
+.add-book-button span {
+    pointer-events: none;
 }
 
 
@@ -378,8 +383,8 @@ input:checked+.slider {
     font-size: 1.5em;
     height: max-content;
     outline: none;
-    padding: 2px;
-    width: 80px;
+    padding: 2px 5px;
+    width: min-content;
 }
 
 .submit-button:hover,

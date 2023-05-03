@@ -1,21 +1,40 @@
 const formModule = (() => {
+    let formMode = 'add';
     //CACHE DOM
     const formBackground = $(`#formBackground`)[0];
     const formContainer = $(`#formContainer`)[0];
     const exitForm = $(`#closeForm`)[0];
+    const submitButton = $(`#submitButton`)[0];
 
     // LISTENERS
-    exitForm.addEventListener(`click`, formModule.closeForm);
-    formBackground.addEventListener(`click`, formModule.closeForm);
+    exitForm.addEventListener(`click`, closeForm);
+    formBackground.addEventListener(`click`, closeForm);
 
-    function showForm() {
-        $(`#bookTitle`)[0].value = ``;
-        $(`#bookAuthor`)[0].value = ``;
-        $(`#coverType`)[0].value = `Paperback`;
-        $(`#price`)[0].value = ``;
-        $(`#availableSwitch`)[0].checked = true;
+    async function showForm(mode, bookID = '') {
+        submitButton.addEventListener(`click`, () => { submitBook(bookID) });
+        formMode = mode;
+
+        if (formMode === 'add') {
+            $(`#bookTitle`)[0].value = ``;
+            $(`#bookAuthor`)[0].value = ``;
+            $(`#coverType`)[0].value = `Paperback`;
+            $(`#price`)[0].value = ``;
+            $(`#availableSwitch`)[0].checked = true;
+        }
+        if (formMode === 'edit') {
+            data = await ajaxModule.booksGETdetail(bookID);
+            $(`#bookTitle`)[0].value = data.title;
+            $(`#bookAuthor`)[0].value = data.authors.map(function (author) {
+                return author['name'];
+            }).join(", ");;
+            $(`#coverType`)[0].value = data.paperback ? 'Paperback' : 'Hardback';
+            $(`#price`)[0].value = data.price;
+            $(`#availableSwitch`)[0].checked = data.available ? true : false;
+            console.log(data);
+        }
         formContainer.classList.add(`show`);
         formBackground.classList.add(`show`);
+        submitButton.removeEventListener(`click`, () => { submitBook(bookID) })
     }
 
     function closeForm() {
@@ -23,17 +42,124 @@ const formModule = (() => {
         formBackground.classList.remove(`show`);
     }
 
+    async function submitBook(bookID) {
+        if (formMode === 'add') {
+            if (addBookModule.invalidForm()) return;
+            await ajaxModule.booksPOST();
+        }
+        if (formMode === 'edit') {
+            await ajaxModule.booksPUT(bookID);
+        }
+        closeForm();
+        ajaxModule.updateDisplay();
+    }
+
     return { showForm, closeForm }
+})();
+
+const ajaxModule = (() => {
+
+    function getJsonObject() {
+        return JSON.stringify({
+            "title": $('#bookTitle')[0].value,
+            "price": parseFloat($('#price')[0].value),
+            "paperback": ($('#coverType')[0].value == "Paperback"),
+            "available": ($('#availableSwitch')[0].checked),
+            "authors": $('#bookAuthor')[0].value.replace(/,\s/g, ",").split(',')
+        })
+    }
+
+    async function booksPOST() {
+        const jsonFormData = getJsonObject();
+        return $.ajax({
+            type: 'POST',
+            url: '/api/books/',
+            data: jsonFormData,
+            dataType: 'json',
+            contentType: 'application/JSON',
+            success: function () {
+                console.log('Book added')
+                console.log(jsonFormData);
+            }
+        })
+    }
+
+    async function booksPUT(bookID) {
+        const jsonFormData = getJsonObject();
+        return $.ajax({
+            type: 'PUT',
+            url: `/api/books/${bookID}/`,
+            data: jsonFormData,
+            dataType: 'json',
+            contentType: 'application/JSON',
+            success: function () {
+                console.log(`Book ${bookID} edited`)
+                console.log(jsonFormData);
+            }
+        })
+    }
+
+    async function booksDEL(row, bookID) {
+        return $.ajax({
+            type: 'DELETE',
+            url: `/api/books/${bookID}/`,
+            success: function () {
+                $(row).remove();
+                console.log(`Book ${bookID} was deleted successfully`);
+            }
+        })
+    }
+
+    async function booksGETdetail(bookID) {
+        return $.ajax({
+            method: "GET",
+            url: `/api/books/${bookID}/`,
+            success: function () {
+                console.log(`Book ${bookID} retrieved`);
+            }
+        });
+    }
+
+    async function booksGET(callback) {
+        $.ajax({
+            method: "GET",
+            url: "/api/books/",
+            success: function (data) {
+                callback(data)
+            }
+        });
+    }
+
+    function createRows(data) {
+        $("tbody").empty();
+        $.each(data, function (key, value) {
+            const id = value.id;
+            const title = value.title;
+            const cover = value.paperback ? "Paperback" : "Hardback";
+            const authors = value.authors.map(function (author) {
+                return author['name'];
+            }).join(", ");
+            const price = value.price;
+            $("tbody").append(
+                `<tr><td class="book-id">` + id + `</td><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td><td class="icons-cell"><span class="material-icons-outlined remove">close</span></td></tr>`
+            )
+        })
+    }
+
+    function updateDisplay() {
+        booksGET(createRows);
+    }
+
+
+    return { booksPOST, booksDEL, booksPUT, booksGETdetail, updateDisplay }
 })();
 
 const addBookModule = (() => {
     //CACHE DOM
-    const submitButton = $(`#submitButton`)[0];
     const addBookButton = $(`#addBookButton`)[0];
 
     //LISTENERS
-    addBookButton.addEventListener(`click`, formModule.showForm);
-    submitButton.addEventListener(`click`, submitBook);
+    addBookButton.addEventListener(`click`, () => { formModule.showForm('add') });
 
     // Add Book Form Validation
     function invalidForm() {
@@ -59,38 +185,7 @@ const addBookModule = (() => {
         return invalid;
     }
 
-    //AJAX Requests
-    async function submitBook() {
-        if (invalidForm()) return;
-        await booksPOST();
-        formModule.closeForm();
-        await displayModule.updateDisplay();
-    }
-
-    function getJsonObject() {
-        return JSON.stringify({
-            "title": $('#bookTitle')[0].value,
-            "price": parseFloat($('#price')[0].value),
-            "paperback": ($('#coverType')[0].value == "Paperback"),
-            "available": ($('#availableSwitch')[0].value == "on"),
-            "authors": $('#bookAuthor')[0].value.replace(/,\s/g, ",").split(',')
-        })
-    }
-
-    function booksPOST() {
-        const jsonFormData = getJsonObject();
-        return $.ajax({
-            type: 'POST',
-            url: '/api/books/',
-            data: jsonFormData,
-            dataType: 'json',
-            contentType: 'application/JSON',
-            success: function () {
-                console.log(jsonFormData);
-            }
-        })
-    }
-
+    return { invalidForm }
 })();
 
 const tableModule = (() => {
@@ -105,7 +200,6 @@ const tableModule = (() => {
 
     //TABLE FUNCTIONALITY
     function handleTableClick(event) {
-        console.log(event.target);
         if (event.target.classList.contains(`remove`)) removeBook(event);
         else if (event.target.classList.contains(`edit`)) editBookInfo(event);
         // else if (event.target.classList.contains(`checked-out-cell`)) changeBookStatus(event);
@@ -113,8 +207,7 @@ const tableModule = (() => {
     }
 
     function findTableRow(event) {
-        let tableRow = event.target.parentNode.parentNode;
-        return tableRow;
+        return event.target.parentNode.parentNode;
     }
 
     function findBookID(tableRow) {
@@ -124,31 +217,14 @@ const tableModule = (() => {
     async function removeBook(event) {
         const tableRow = findTableRow(event);
         const bookID = findBookID(tableRow);
-        await bookDEL(tableRow, bookID);
-        // await displayModule.updateDisplay();
+        await ajaxModule.booksDEL(tableRow, bookID);
     }
 
-    function bookDEL(row, bookID) {
-        return $.ajax({
-            type: 'DELETE',
-            url: `/api/books/${bookID}`,
-            success: function () {
-                $(row).remove();
-                console.log(`Book ${bookID} was deleted successfully`);
-            }
-        })
+    async function editBookInfo(event) {
+        const tableRow = findTableRow(event);
+        const bookID = findBookID(tableRow);
+        formModule.showForm('edit', bookID);
     }
-
-    function editBookInfo(event) {
-        const targetBook = findBookID(event);
-        formModule.showForm();
-    }
-
-    // function changeBookStatus(event) {
-    //     const targetBook = findBookIndex(event);
-    //     myLibrary[targetBook].checkOut();
-    //     updateDisplay();
-    // }
 
     // function handleSorting(event) {
     //     if (event.target.innerText === ``) return;
@@ -187,37 +263,4 @@ const tableModule = (() => {
 
 
 
-})();
-
-const displayModule = (() => {
-    function booksGET(callback) {
-        $.ajax({
-            method: "GET",
-            url: "/api/books/",
-            success: function (data) {
-                callback(data)
-            }
-        });
-    }
-
-    function createRows(data) {
-        $("tbody").empty();
-        $.each(data, function (key, value) {
-            const title = value.title;
-            const cover = value.paperback ? "Paperback" : "Hardback";
-            const authors = value.authors.map(function (author) {
-                return author['name'];
-            }).join(", ");
-            const price = value.price;
-            $("tbody").append(
-                `<tr><td class="book-id"></td><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td><td class="icons-cell"><span class="material-icons-outlined edit">close</span></td></tr>`
-            )
-        })
-    }
-
-    function updateDisplay() {
-        booksGET(createRows);
-    }
-
-    return { updateDisplay }
 })();

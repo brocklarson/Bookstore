@@ -128,13 +128,56 @@ def book_detail(request, pk):
         return JsonResponse(book_serializer.data)
 
     elif request.method == 'PUT':
+        # Remove correlations between book and author
+        entries = Author.books.through.objects.filter(book_id=pk)
+        for entry in entries:
+            entry.delete()
+
+        #Get JSON data
         book_data = JSONParser().parse(request)
+        if 'authors' in book_data:
+            # Update author
+            author_ids = []
+            for author in book_data["authors"]:
+                try:
+                    #If author already in database, just append id to author_ids
+                    id = Author.objects.filter(name=author).values().first()["id"]
+                    author_ids.append(id)
+                except:
+                    #If not, create new author 
+                    author_data = {"name": author}
+                    author_serializer = AuthorSerializer(author, data=author_data)
+                    if author_serializer.is_valid():
+                        author_serializer.save()
+                        author_ids.append(author_serializer.data['id'])
+                    else:
+                        return JsonResponse(author_serializer.errors,
+                                        status=status.HTTP_400_BAD_REQUEST)
+
+        # Update book
         book_serializer = BookSerializer(book, data=book_data)
         if book_serializer.is_valid():
             book_serializer.save()
-            return JsonResponse(book_serializer.data)
-        return JsonResponse(book_serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return JsonResponse(book_serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)        
+        
+        # Add correlation between book and author to book_author table
+        for author_id in author_ids:
+            try:
+                author = Author.objects.get(pk=author_id)
+            except: 
+                return JsonResponse({'message': 'Could not get author'},
+                            status=status.HTTP_404_NOT_FOUND)
+            
+            author.books.add(book)
+            author.save()
+    
+        #Return created book
+        book_serializer = BookSerializer(book)
+        return JsonResponse(book_serializer.data,
+                                status=status.HTTP_201_CREATED)
+    
 
     elif request.method == 'DELETE':
         book.delete()
