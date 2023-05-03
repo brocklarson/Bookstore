@@ -11,7 +11,8 @@ const formModule = (() => {
     formBackground.addEventListener(`click`, closeForm);
 
     async function showForm(mode, bookID = '') {
-        submitButton.addEventListener(`click`, () => { submitBook(bookID) });
+        submitButton.addEventListener(`click`, submitBook);
+        submitButton.param = bookID;
         formMode = mode;
 
         if (formMode === 'add') {
@@ -30,11 +31,9 @@ const formModule = (() => {
             $(`#coverType`)[0].value = data.paperback ? 'Paperback' : 'Hardback';
             $(`#price`)[0].value = data.price;
             $(`#availableSwitch`)[0].checked = data.available ? true : false;
-            console.log(data);
         }
         formContainer.classList.add(`show`);
         formBackground.classList.add(`show`);
-        submitButton.removeEventListener(`click`, () => { submitBook(bookID) })
     }
 
     function closeForm() {
@@ -42,7 +41,9 @@ const formModule = (() => {
         formBackground.classList.remove(`show`);
     }
 
-    async function submitBook(bookID) {
+    async function submitBook(event) {
+        submitButton.removeEventListener(`click`, submitBook);
+        const bookID = event.target.param;
         if (formMode === 'add') {
             if (addBookModule.invalidForm()) return;
             await ajaxModule.booksPOST();
@@ -139,7 +140,7 @@ const ajaxModule = (() => {
             const authors = value.authors.map(function (author) {
                 return author['name'];
             }).join(", ");
-            const price = value.price;
+            const price = parseFloat(value.price).toFixed(2);
             $("tbody").append(
                 `<tr><td class="book-id">` + id + `</td><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td><td class="icons-cell"><span class="material-icons-outlined remove">close</span></td></tr>`
             )
