@@ -20,7 +20,7 @@ const formModule = (() => {
             $(`#bookAuthor`)[0].value = ``;
             $(`#coverType`)[0].value = `Paperback`;
             $(`#price`)[0].value = ``;
-            $(`#availableSwitch`)[0].checked = true;
+            $(`#availability`)[0].value = `Available`;
         }
         if (formMode === 'edit') {
             data = await ajaxModule.booksGETdetail(bookID);
@@ -30,7 +30,7 @@ const formModule = (() => {
             }).join(", ");;
             $(`#coverType`)[0].value = data.paperback ? 'Paperback' : 'Hardback';
             $(`#price`)[0].value = data.price;
-            $(`#availableSwitch`)[0].checked = data.available ? true : false;
+            $(`#availability`)[0].value = data.available;
         }
         formContainer.classList.add(`show`);
         formBackground.classList.add(`show`);
@@ -65,7 +65,7 @@ const ajaxModule = (() => {
             "title": $('#bookTitle')[0].value,
             "price": parseFloat($('#price')[0].value),
             "paperback": ($('#coverType')[0].value == "Paperback"),
-            "available": ($('#availableSwitch')[0].checked),
+            "available": $('#availability')[0].value,
             "authors": $('#bookAuthor')[0].value.replace(/,\s/g, ",").split(',')
         })
     }

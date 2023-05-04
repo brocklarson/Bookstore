@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view
 
 def index(request):
     context = {
-        'books': Book.objects.all()
+        'books': Book.objects.filter(available="Available").order_by('title')
     } 
     return render(request, "books/index.html", context)
 
@@ -21,7 +21,7 @@ class index(APIView):
     template_name = 'books/index.html'
 
     def get(self, request):
-        queryset = Book.objects.all()
+        queryset = Book.objects.filter(available="Available").order_by('title')
         return Response({'books': queryset})
 
 
@@ -49,6 +49,14 @@ def book_list(request):
 
     elif request.method == 'POST':
         book_data = JSONParser().parse(request)
+        #Validate "available" field
+        if book_data['available'] not in ['Available', 'Unavailable', 'Purchased']:
+            return JsonResponse(
+            {
+                'message':
+                'Available field must be Available, Unavailable, or Purchased'
+            },
+            status=status.HTTP_400_BAD_REQUEST)
         #Forces "authors" field to be included in request
         if 'authors' not in book_data:
             return JsonResponse(
@@ -128,6 +136,14 @@ def book_detail(request, pk):
         return JsonResponse(book_serializer.data)
 
     elif request.method == 'PUT':
+        #Validate "available" field
+        if book_data['available'] not in ['Available', 'Unavailable', 'Purchased']:
+            return JsonResponse(
+            {
+                'message':
+                'Available field must be Available, Unavailable, or Purchased'
+            },
+            status=status.HTTP_400_BAD_REQUEST)
         # Remove correlations between book and author
         entries = Author.books.through.objects.filter(book_id=pk)
         for entry in entries:
@@ -187,7 +203,7 @@ def book_detail(request, pk):
 
 @api_view(['GET'])
 def book_list_available(request):
-    books = Book.objects.filter(available=True)
+    books = Book.objects.filter(available='Available')
 
     if request.method == 'GET':
         books_serializer = BookSerializer(books, many=True)
