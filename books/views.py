@@ -38,7 +38,7 @@ class list_all_books(APIView):
 @api_view(['GET', 'POST', 'DELETE'])
 def book_list(request):
     if request.method == 'GET':
-        books = Book.objects.all()
+        books = Book.objects.all().order_by('title')
 
         title = request.GET.get('title', None)
         if title is not None:
@@ -203,7 +203,23 @@ def book_detail(request, pk):
 
 @api_view(['GET'])
 def book_list_available(request):
-    books = Book.objects.filter(available='Available')
+    books = Book.objects.filter(available='Available').order_by('title')
+
+    if request.method == 'GET':
+        books_serializer = BookSerializer(books, many=True)
+        return JsonResponse(books_serializer.data, safe=False)
+
+@api_view(['GET'])
+def book_list_unavailable(request):
+    books = Book.objects.filter(available='Unavailable').order_by('title')
+
+    if request.method == 'GET':
+        books_serializer = BookSerializer(books, many=True)
+        return JsonResponse(books_serializer.data, safe=False)
+
+@api_view(['GET'])
+def book_list_purchased(request):
+    books = Book.objects.filter(available='Purchased').order_by('title')
 
     if request.method == 'GET':
         books_serializer = BookSerializer(books, many=True)
