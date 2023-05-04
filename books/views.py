@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http.response import JsonResponse
+from django.db.models.functions import Lower
 from rest_framework.parsers import JSONParser
 from rest_framework import status
 from rest_framework.renderers import TemplateHTMLRenderer
@@ -12,7 +13,7 @@ from rest_framework.decorators import api_view
 
 def index(request):
     context = {
-        'books': Book.objects.filter(available="Available").order_by('title')
+        'books': Book.objects.filter(available="Available").order_by(Lower('title'))
     } 
     return render(request, "books/index.html", context)
 
@@ -21,7 +22,7 @@ class index(APIView):
     template_name = 'books/index.html'
 
     def get(self, request):
-        queryset = Book.objects.filter(available="Available").order_by('title')
+        queryset = Book.objects.filter(available="Available").order_by(Lower('title'))
         return Response({'books': queryset})
 
 
@@ -38,7 +39,7 @@ class list_all_books(APIView):
 @api_view(['GET', 'POST', 'DELETE'])
 def book_list(request):
     if request.method == 'GET':
-        books = Book.objects.all().order_by('title')
+        books = Book.objects.all().order_by(Lower('title'))
 
         title = request.GET.get('title', None)
         if title is not None:
@@ -203,7 +204,7 @@ def book_detail(request, pk):
 
 @api_view(['GET'])
 def book_list_available(request):
-    books = Book.objects.filter(available='Available').order_by('title')
+    books = Book.objects.filter(available='Available').order_by(Lower('title'))
 
     if request.method == 'GET':
         books_serializer = BookSerializer(books, many=True)
@@ -211,7 +212,7 @@ def book_list_available(request):
 
 @api_view(['GET'])
 def book_list_unavailable(request):
-    books = Book.objects.filter(available='Unavailable').order_by('title')
+    books = Book.objects.filter(available='Unavailable').order_by(Lower('title'))
 
     if request.method == 'GET':
         books_serializer = BookSerializer(books, many=True)
@@ -219,11 +220,31 @@ def book_list_unavailable(request):
 
 @api_view(['GET'])
 def book_list_purchased(request):
-    books = Book.objects.filter(available='Purchased').order_by('title')
+    books = Book.objects.filter(available='Purchased').order_by(Lower('title'))
 
     if request.method == 'GET':
         books_serializer = BookSerializer(books, many=True)
         return JsonResponse(books_serializer.data, safe=False)
+
+@api_view(['PUT'])
+def book_list_purchase(request, pk):
+    try:
+        book = Book.objects.get(pk=pk)
+    except Book.DoesNotExist:
+        return JsonResponse({'message': 'The book does not exist'},
+                            status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'PUT':
+        book_data = {"available": "Purchased"}
+        book_serializer = BookSerializer(book, data=book_data)
+        if book_serializer.is_valid():
+            book_serializer.save()
+        else:
+            return JsonResponse(book_serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+        
+        return JsonResponse(book_serializer.data,
+                                status=status.HTTP_201_CREATED) 
 
 @api_view(['GET', 'POST', 'DELETE'])
 def author_list(request):

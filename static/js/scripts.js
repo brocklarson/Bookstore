@@ -121,10 +121,26 @@ const ajaxModule = (() => {
         });
     }
 
+    async function booksPurchase(bookID) {
+        return $.ajax({
+            method: "PUT",
+            url: `/api/books/purchase/${bookID}/`,
+            success: function () {
+                console.log(`Book ${bookID} purchased`);
+            }
+        });
+    }
+
     async function booksGET(callback) {
+        mode = tableModule.getBooksMode();
+        let apiUrl = "/api/books/";
+        if (mode == "available") apiUrl += "available/";
+        else if (mode == "unavailable") apiUrl += "unavailable/";
+        else if (mode == "purchased") apiUrl += "purchased/";
+
         $.ajax({
             method: "GET",
-            url: "/api/books/",
+            url: apiUrl,
             success: function (data) {
                 callback(data)
             }
@@ -142,7 +158,7 @@ const ajaxModule = (() => {
             }).join(", ");
             const price = parseFloat(value.price).toFixed(2);
             $("tbody").append(
-                `<tr><td class="book-id">` + id + `</td><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td><td class="icons-cell"><span class="material-icons-outlined remove">close</span></td></tr>`
+                `<tr><td class="book-id">` + id + `</td><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td class="icons-cell"><span class="material-icons-outlined sell">sell</span></td><td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td><td class="icons-cell"><span class="material-icons-outlined remove">close</span></td></tr>`
             )
         })
     }
@@ -152,7 +168,7 @@ const ajaxModule = (() => {
     }
 
 
-    return { booksPOST, booksDEL, booksPUT, booksGETdetail, updateDisplay }
+    return { booksPOST, booksDEL, booksPUT, booksGETdetail, booksPurchase, updateDisplay }
 })();
 
 const addBookModule = (() => {
@@ -190,19 +206,36 @@ const addBookModule = (() => {
 })();
 
 const tableModule = (() => {
+    BOOKS_MODE = "available";
     // CACHE DOM
     const bookTable = $(`#tableBody`)[0];
     const table = $(`table`)[0];
     const searchBar = $(`#searchBar`)[0];
+    const bookButtons = $(`.book-status-buttons button`);
 
     //LISTENERS
     table.addEventListener(`click`, handleTableClick);
+    Array.from(bookButtons).forEach(btn => btn.addEventListener(`click`, handleBookButtons));
     // searchBar.addEventListener('input', updateTable);
+
+    // BOOK AVAILABILITY FUNCTIONALITY
+    function handleBookButtons(event) {
+        if (event.target.id == "allBooks") BOOKS_MODE = "all";
+        else if (event.target.id == "availableBooks") BOOKS_MODE = "available";
+        else if (event.target.id == "unavailableBooks") BOOKS_MODE = "unavailable";
+        else if (event.target.id == "purchasedBooks") BOOKS_MODE = "purchased";
+
+        Array.from(bookButtons).forEach(btn => btn.classList.remove("active"));
+        event.target.classList.add("active");
+
+        ajaxModule.updateDisplay();
+    }
 
     //TABLE FUNCTIONALITY
     function handleTableClick(event) {
         if (event.target.classList.contains(`remove`)) removeBook(event);
         else if (event.target.classList.contains(`edit`)) editBookInfo(event);
+        else if (event.target.classList.contains(`sell`)) purchaseBook(event);
         // else if (event.target.classList.contains(`checked-out-cell`)) changeBookStatus(event);
         // else if (event.target.classList.contains(`table-header-text`)) handleSorting(event);
     }
@@ -221,12 +254,22 @@ const tableModule = (() => {
         await ajaxModule.booksDEL(tableRow, bookID);
     }
 
+    async function purchaseBook(event) {
+        const tableRow = findTableRow(event);
+        const bookID = findBookID(tableRow);
+        await ajaxModule.booksPurchase(bookID);
+        await ajaxModule.updateDisplay();
+    }
+
     async function editBookInfo(event) {
         const tableRow = findTableRow(event);
         const bookID = findBookID(tableRow);
         formModule.showForm('edit', bookID);
     }
 
+    function getBooksMode() {
+        return BOOKS_MODE;
+    }
     // function handleSorting(event) {
     //     if (event.target.innerText === ``) return;
     //     const sortParam = getSortParameter(event);
@@ -262,6 +305,6 @@ const tableModule = (() => {
     //     }
     // }
 
-
+    return { getBooksMode }
 
 })();

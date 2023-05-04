@@ -125,7 +125,7 @@ header h1 {
     width: 100%;
 }
 
-.book-type-buttons button {
+.book-status-buttons button {
     background: linear-gradient(135deg, rgb(33, 150, 243) 0%, rgb(21, 101, 192) 100%);
     border-radius: 5px;
     border: solid 1px black;
@@ -140,8 +140,8 @@ header h1 {
     width: min-content;
 }
 
-.book-type-buttons button:hover,
-.book-type-buttons button:focus,
+.book-status-buttons button:hover,
+.book-status-buttons button:focus,
 button.active {
     filter: brightness(0.9);
 }
@@ -186,8 +186,14 @@ button.active {
     text-decoration: underline;
 }
 
-th:nth-child(6),
-th:nth-child(7) {
+.sell {
+    -webkit-transform: scaleX(-1);
+    transform: scaleX(-1);
+}
+
+th:nth-last-child(1),
+th:nth-last-child(2),
+th:nth-last-child(3) {
     text-align: center !important;
     width: 30px;
 }
