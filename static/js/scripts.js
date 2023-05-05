@@ -284,7 +284,6 @@ const tableModule = (() => {
         Array.from(bookTable.children).forEach(row => {
             LOCAL_COPY.push(row);
         });
-        console.log(LOCAL_COPY)
     }
     updateLocalCopy();
 

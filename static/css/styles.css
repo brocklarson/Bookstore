@@ -150,7 +150,8 @@ button.active {
 /* BOOK TABLE */
 
 .book-table {
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-bottom: 80px;
     margin-left: 3vw;
     padding: 0 8px;
@@ -159,10 +160,19 @@ button.active {
     word-wrap: normal;
 }
 
+thead>tr {
+    position: sticky;
+    top: 0;
+    background-color: white;
+    border-bottom: solid 1px rgba(142, 142, 142, 0.5);
+    z-index: 10;
+}
+
 .book-table th {
     font-size: 0.9em;
     padding: 8px 0;
     text-align: left;
+    border-bottom: solid 1px rgba(142, 142, 142, 0.5);
 }
 
 .header-arrow {
@@ -205,6 +215,8 @@ th:nth-last-child(3) {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    border-bottom: solid 1px rgba(142, 142, 142, 0.5);
+
 }
 
 .checked-out-cell {
@@ -214,7 +226,6 @@ th:nth-last-child(3) {
 
 .book-table tr {
     align-items: center;
-    border-bottom: solid 1px rgba(142, 142, 142, 0.5);
     text-align: center;
 }
 
