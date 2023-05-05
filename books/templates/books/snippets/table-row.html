@@ -10,7 +10,7 @@
     <td>Hardback</td>
     {% endif %}
 
-    <td>${{ book.price }}</td>
+    <td>$<span>{{ book.price|floatformat:2 }}</span></td>
 
     <td class="icons-cell"><span class="material-icons-outlined sell">sell</span></td>
     <td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td>

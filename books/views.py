@@ -51,7 +51,7 @@ def book_list(request):
     elif request.method == 'POST':
         book_data = JSONParser().parse(request)
         #Validate "available" field
-        if book_data['available'] not in ['Available', 'Unavailable', 'Purchased']:
+        if book_data['available'].lower() not in ['available', 'unavailable', 'purchased']:
             return JsonResponse(
             {
                 'message':
@@ -137,8 +137,9 @@ def book_detail(request, pk):
         return JsonResponse(book_serializer.data)
 
     elif request.method == 'PUT':
+        book_data = JSONParser().parse(request)
         #Validate "available" field
-        if book_data['available'] not in ['Available', 'Unavailable', 'Purchased']:
+        if book_data['available'].lower() not in ['available', 'unavailable', 'purchased']:
             return JsonResponse(
             {
                 'message':
@@ -150,26 +151,25 @@ def book_detail(request, pk):
         for entry in entries:
             entry.delete()
 
-        #Get JSON data
-        book_data = JSONParser().parse(request)
-        if 'authors' in book_data:
-            # Update author
-            author_ids = []
-            for author in book_data["authors"]:
-                try:
-                    #If author already in database, just append id to author_ids
-                    id = Author.objects.filter(name=author).values().first()["id"]
-                    author_ids.append(id)
-                except:
-                    #If not, create new author 
-                    author_data = {"name": author}
-                    author_serializer = AuthorSerializer(author, data=author_data)
-                    if author_serializer.is_valid():
-                        author_serializer.save()
-                        author_ids.append(author_serializer.data['id'])
-                    else:
-                        return JsonResponse(author_serializer.errors,
-                                        status=status.HTTP_400_BAD_REQUEST)
+        # Update author
+        author_ids = []
+        for author in book_data["authors"]:
+            try:
+                #If author already in database, just append id to author_ids
+                id = Author.objects.filter(name=author).values().first()["id"]
+                author_ids.append(id)
+            except:
+                #If not, create new author 
+                author_data = {"name": author}
+                author_serializer = AuthorSerializer(data=author_data)
+                if author_serializer.is_valid():
+                    author_serializer.save()
+                    author_ids.append(author_serializer.data['id'])
+                else:
+                    return JsonResponse(author_serializer.errors,
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+                    
 
         # Update book
         book_serializer = BookSerializer(book, data=book_data)

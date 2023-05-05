@@ -9,11 +9,8 @@
   {% load static %}
   <link rel="icon" href="{% static 'images/favicon.ico' %}">
   <!-- CSS -->
+  <link rel="stylesheet" href="{% static 'css/google_material_icons.css' %}" />
   <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
-  <link
-    href="https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp"
-    rel="stylesheet">
-
 
   <title>{% block title %}Bookstore{% endblock %}</title>
   {% block extrahead %} {% endblock %}
@@ -37,6 +34,7 @@
   {% block content %}
   {% endblock content %}
 
+  <span id="snackbar"></span>
   <footer>
     <p>Brock Larson &copy; 2023 </p>
     <a href="https://github.com/brocklarson" target="_blank">

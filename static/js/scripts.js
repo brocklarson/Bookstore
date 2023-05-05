@@ -60,6 +60,13 @@ const formModule = (() => {
 
 const ajaxModule = (() => {
 
+    function showSnackBar(msg) {
+        const sb = $("#snackbar")[0];
+        sb.innerText = msg;
+        sb.className = "show";
+        setTimeout(() => { sb.className = sb.className.replace("show", ""); }, 3000);
+    }
+
     function getJsonObject() {
         return JSON.stringify({
             "title": $('#bookTitle')[0].value,
@@ -79,8 +86,7 @@ const ajaxModule = (() => {
             dataType: 'json',
             contentType: 'application/JSON',
             success: function () {
-                console.log('Book added')
-                console.log(jsonFormData);
+                showSnackBar('Book Added');
             }
         })
     }
@@ -94,8 +100,7 @@ const ajaxModule = (() => {
             dataType: 'json',
             contentType: 'application/JSON',
             success: function () {
-                console.log(`Book ${bookID} edited`)
-                console.log(jsonFormData);
+                showSnackBar('Book Updated');
             }
         })
     }
@@ -106,7 +111,8 @@ const ajaxModule = (() => {
             url: `/api/books/${bookID}/`,
             success: function () {
                 $(row).remove();
-                console.log(`Book ${bookID} was deleted successfully`);
+                tableModule.updateLocalCopy();
+                showSnackBar('Book Deleted');
             }
         })
     }
@@ -126,7 +132,7 @@ const ajaxModule = (() => {
             method: "PUT",
             url: `/api/books/purchase/${bookID}/`,
             success: function () {
-                console.log(`Book ${bookID} purchased`);
+                showSnackBar('Book Purchased');
             }
         });
     }
@@ -158,9 +164,10 @@ const ajaxModule = (() => {
             }).join(", ");
             const price = parseFloat(value.price).toFixed(2);
             $("tbody").append(
-                `<tr><td class="book-id">` + id + `</td><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$` + price + `</td><td class="icons-cell"><span class="material-icons-outlined sell">sell</span></td><td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td><td class="icons-cell"><span class="material-icons-outlined remove">close</span></td></tr>`
+                `<tr><td class="book-id">` + id + `</td><td>` + title + `</td><td>` + authors + `</td><td>` + cover + `</td><td>$<span>` + price + `</span></td><td class="icons-cell"><span class="material-icons-outlined sell">sell</span></td><td class="icons-cell"><span class="material-icons-outlined edit">edit</span></td><td class="icons-cell"><span class="material-icons-outlined remove">close</span></td></tr>`
             )
         })
+        tableModule.updateLocalCopy();
     }
 
     function updateDisplay() {
@@ -206,7 +213,8 @@ const addBookModule = (() => {
 })();
 
 const tableModule = (() => {
-    BOOKS_MODE = "available";
+    let BOOKS_MODE = "available";
+    let LOCAL_COPY = [];
     // CACHE DOM
     const bookTable = $(`#tableBody`)[0];
     const table = $(`table`)[0];
@@ -216,7 +224,7 @@ const tableModule = (() => {
     //LISTENERS
     table.addEventListener(`click`, handleTableClick);
     Array.from(bookButtons).forEach(btn => btn.addEventListener(`click`, handleBookButtons));
-    // searchBar.addEventListener('input', updateTable);
+    searchBar.addEventListener('input', updateTable);
 
     // BOOK AVAILABILITY FUNCTIONALITY
     function handleBookButtons(event) {
@@ -236,8 +244,7 @@ const tableModule = (() => {
         if (event.target.classList.contains(`remove`)) removeBook(event);
         else if (event.target.classList.contains(`edit`)) editBookInfo(event);
         else if (event.target.classList.contains(`sell`)) purchaseBook(event);
-        // else if (event.target.classList.contains(`checked-out-cell`)) changeBookStatus(event);
-        // else if (event.target.classList.contains(`table-header-text`)) handleSorting(event);
+        else if (event.target.classList.contains(`table-header-text`)) handleSorting(event);
     }
 
     function findTableRow(event) {
@@ -270,41 +277,103 @@ const tableModule = (() => {
     function getBooksMode() {
         return BOOKS_MODE;
     }
-    // function handleSorting(event) {
-    //     if (event.target.innerText === ``) return;
-    //     const sortParam = getSortParameter(event);
-    //     const sortDirection = getSortDirection(event);
-    //     sortLibrary(sortDirection, sortParam);
-    //     updateDisplay();
-    // }
 
-    // function getSortParameter(event) {
-    //     if (event.target.innerText === `Status`) return `checkedOut`;
-    //     else if (event.target.innerText === `Title`) return `title`;
-    //     else if (event.target.innerText === `Author`) return `author`;
-    //     else if (event.target.innerText === `Cover`) return `coverType`;
-    //     else return `BookID`;
-    // }
+    // Search Bar Functionality //
+    function updateLocalCopy() {
+        LOCAL_COPY = []
+        Array.from(bookTable.children).forEach(row => {
+            LOCAL_COPY.push(row);
+        });
+        console.log(LOCAL_COPY)
+    }
+    updateLocalCopy();
 
-    // function getSortDirection(event) {
-    //     const sortArrow = event.target.parentNode.lastElementChild;
-    //     const resetArrows = document.querySelectorAll(`.header-arrow`);
+    function updateTable() {
+        filteredTable = filterBooks();
+        createTable(filteredTable);
+    }
 
-    //     for (let i = 0; i < resetArrows.length; i++) {
-    //         if (sortArrow !== resetArrows[i]) {
-    //             resetArrows[i].innerText = ``;
-    //         }
-    //     }
+    function filterBooks() {
+        const search = searchBar.value.toLowerCase();
+        return LOCAL_COPY.filter(row => (row.children.item(1).innerText.toLowerCase().includes(search) || row.children.item(2).innerText.toLowerCase().includes(search)))
+    }
 
-    //     if (sortArrow.innerText === `` || sortArrow.innerText === `expand_more`) {
-    //         sortArrow.innerText = `expand_less`;
-    //         return `ascending`;
-    //     } else {
-    //         sortArrow.innerText = `expand_more`;
-    //         return `descending`;
-    //     }
-    // }
+    function createTable(filteredTable) {
+        $("tbody").empty();
+        filteredTable.forEach(row => $("tbody").append(row));
+    }
 
-    return { getBooksMode }
+    // Sorting Functionality // 
+    function handleSorting(event) {
+        if (event.target.innerText === ``) return;
+        let filteredTable = filterBooks();
+        const sortParam = getSortParameter(event);
+        const sortDirection = getSortDirection(event);
+        filteredTable = sortLibrary(sortDirection, sortParam, filteredTable);
+        createTable(filteredTable);
+    }
+
+    function getSortParameter(event) {
+        if (event.target.innerText === `Title`) return 1;
+        else if (event.target.innerText === `Authors`) return 2;
+        else if (event.target.innerText === `Cover`) return 3;
+        else if (event.target.innerText === `Price`) return 4;
+    }
+
+    function sortLibrary(sortDirection, sortParam, filteredTable) {
+        if (sortDirection === `ascending`) {
+            filteredTable = filteredTable.sort(function (a, b) {
+                let first, second;
+                if (sortParam === 4) {
+                    first = parseFloat(b.children.item(sortParam).lastElementChild.innerText);
+                    second = parseFloat(a.children.item(sortParam).lastElementChild.innerText);
+                } else {
+                    first = b.children.item(sortParam).innerText.toString().toLowerCase();
+                    second = a.children.item(sortParam).innerText.toString().toLowerCase();
+                }
+
+                if (second > first) return 1;
+                else if (second === first) return 0;
+                else return -1;
+            });
+        } else if (sortDirection === `descending`) {
+            filteredTable = filteredTable.sort(function (a, b) {
+                let first, second;
+                if (sortParam === 4) {
+                    first = parseFloat(b.children.item(sortParam).lastElementChild.innerText);
+                    second = parseFloat(a.children.item(sortParam).lastElementChild.innerText);
+                } else {
+                    first = b.children.item(sortParam).innerText.toString().toLowerCase();
+                    second = a.children.item(sortParam).innerText.toString().toLowerCase();
+                }
+
+                if (second > first) return -1;
+                else if (second === first) return 0;
+                else return 1;
+            });
+        }
+        return filteredTable
+    }
+
+    function getSortDirection(event) {
+        const sortArrow = event.target.parentNode.lastElementChild;
+        const resetArrows = document.querySelectorAll(`.header-arrow`);
+
+        for (let i = 0; i < resetArrows.length; i++) {
+            if (sortArrow !== resetArrows[i]) {
+                resetArrows[i].innerText = ``;
+            }
+        }
+
+        if (sortArrow.innerText === `` || sortArrow.innerText === `expand_more`) {
+            sortArrow.innerText = `expand_less`;
+            return `ascending`;
+        } else {
+            sortArrow.innerText = `expand_more`;
+            return `descending`;
+        }
+    }
+
+    return { getBooksMode, updateLocalCopy }
 
 })();
